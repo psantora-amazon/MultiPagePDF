@@ -17,6 +17,11 @@ class MultiPagePDF:
         self.start()
 
     def make_args(self):
+        """[summary]
+
+        Returns:
+            [type]: [description]
+        """
         args = {
             "JobId": self.jobID
         }
@@ -27,6 +32,11 @@ class MultiPagePDF:
             return args
 
     def start(self):
+        """[summary]
+
+        Returns:
+            [type]: [description]
+        """
         res = self.client.start_document_text_detection(
             DocumentLocation={
                 'S3Object': {
@@ -40,7 +50,9 @@ class MultiPagePDF:
 
         return self.jobID
 
-    def get_update(self):
+    def _get_update(self):
+        """[summary]
+        """
         res = self.client.get_document_text_detection(**self.make_args())
         self.nextToken = res.get('NextToken', None)
         self.jobStatus = res.get('JobStatus', None)
@@ -54,15 +66,25 @@ class MultiPagePDF:
             self.FINISHED = True
             return
 
-    def get_results(self):
+    def _get_results(self):
+        """[summary]
+
+        Returns:
+            [type]: [description]
+        """
         start_time = time()
         while not self.FINISHED:
             print("--- %s seconds ---" % (time() - start_time))
-            self.get_update()
+            self._get_update()
 
         return self.pages
 
     def build_dataframe(self):
+        """[summary]
+
+        Returns:
+            [type]: [description]
+        """
         row_list = []
         for page in self.pages:
             for item in page.get('Blocks'):
@@ -77,7 +99,15 @@ class MultiPagePDF:
         df = pd.DataFrame(row_list)
         return df
 
-    def lines_to_csv(self, fileName=None):
+    def _out_to_csv(self, fileName=None):
+        """[summary]
+
+        Args:
+            fileName ([type], optional): [description]. Defaults to None.
+
+        Returns:
+            [type]: [description]
+        """
         if not fileName:
             fileName = self.file
         df = self.build_dataframe()
@@ -87,12 +117,12 @@ class MultiPagePDF:
         )
 
 if __name__ == '__main__':
+    """[summary]
+    """
 
     # Document
     bucketName = "" # Enter your s3. bucket
     documentName = "" # Enter name of your file
     pdf_textract = MultiPagePDF(bucketName, documentName)
-    pages = pdf_textract.get_results()
+    pages = pdf_textract._get_results()
     pdf_dataframe = pdf_textract.build_dataframe()
-
-
